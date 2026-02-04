@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row align-items-center">
+  <div class="col-lg-6">
+    <h1 class="display-5">Smart Crop Advisory System</h1>
+    <p class="lead">
+      Empowering farmers with crop recommendations, fertilizer guidance, and weather-based tips.
+    </p>
+    <a class="btn btn-success btn-lg" href="{{ url_for('register') }}">Get Started</a>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Key Features</h5>
+        <ul>
+          <li>Personalized crop recommendations</li>
+          <li>Fertilizer and nutrient guidance</li>
+          <li>Weather-aware advisories</li>
+          <li>History of past advisories</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

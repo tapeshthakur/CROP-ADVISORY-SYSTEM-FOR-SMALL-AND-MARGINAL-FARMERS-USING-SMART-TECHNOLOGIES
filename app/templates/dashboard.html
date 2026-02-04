@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">Dashboard</h2>
+<div class="row">
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Latest Advisory</h5>
+        {% if latest %}
+          <p><strong>Recommended Crop:</strong> {{ latest.crop }}</p>
+          <p><strong>Fertilizer:</strong> {{ latest.fertilizer }}</p>
+          <p><strong>Weather:</strong> {{ latest.temperature }}°C, {{ latest.rainfall }}mm rain, {{ latest.humidity }}% humidity</p>
+          <a class="btn btn-outline-success" href="{{ url_for('history') }}">View History</a>
+        {% else %}
+          <p>No advisories yet. Start by creating a new advisory.</p>
+          <a class="btn btn-success" href="{{ url_for('advisory') }}">Create Advisory</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Quick Tips</h5>
+        <ul>
+          <li>Update soil test data every season.</li>
+          <li>Use balanced fertilizers based on nutrient gaps.</li>
+          <li>Monitor fields after heavy rainfall.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
