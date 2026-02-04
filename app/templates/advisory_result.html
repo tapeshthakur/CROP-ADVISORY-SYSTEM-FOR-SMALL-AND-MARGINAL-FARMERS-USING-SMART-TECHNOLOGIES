@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">Advisory Result</h2>
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5>Recommended Crop: <span class="text-success">{{ advisory.crop }}</span></h5>
+        <p><strong>Fertilizer Recommendation:</strong> {{ advisory.fertilizer }}</p>
+        <p><strong>Pest & Disease Advisory:</strong> {{ advisory.pest_advice }}</p>
+        <p><strong>Weather Summary:</strong> {{ advisory.temperature }}°C, {{ advisory.rainfall }}mm rain, {{ advisory.humidity }}% humidity</p>
+        <p><strong>Explanation:</strong> {{ advisory.explanation }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6>Next Steps</h6>
+        <ul>
+          <li>Record this advisory for future planning.</li>
+          <li>Compare with past advisories in History.</li>
+          <li>Monitor weather updates weekly.</li>
+        </ul>
+        <a class="btn btn-outline-success" href="{{ url_for('history') }}">Go to History</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

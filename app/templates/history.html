@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">Advisory History</h2>
+{% if items %}
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Location</th>
+          <th>Crop</th>
+          <th>Weather</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.created_at.split('T')[0] }}</td>
+          <td>{{ item.location }}</td>
+          <td>{{ item.crop }}</td>
+          <td>{{ item.temperature }}°C, {{ item.rainfall }}mm, {{ item.humidity }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p>No advisory records yet.</p>
+{% endif %}
+{% endblock %}
