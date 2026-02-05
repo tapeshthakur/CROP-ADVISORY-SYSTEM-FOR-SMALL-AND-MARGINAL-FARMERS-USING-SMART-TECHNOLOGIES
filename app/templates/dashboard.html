@@ -1,60 +1,32 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard | Crop Advisory DSS{% endblock %}
 
 {% block content %}
-<section class="mb-4">
-  <div class="hero-card p-4 p-md-5">
-    <h1 class="h3 fw-bold mb-2">Farmer Decision Dashboard</h1>
-    <p class="mb-0">Review your latest recommendation and plan your next farm activity with confidence.</p>
-  </div>
-</section>
-
-<div class="row g-4">
-  <div class="col-lg-8">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-header bg-white border-0 pt-4 px-4">
-        <h5 class="mb-0"><i class="bi bi-stars text-success me-2"></i>Latest Advisory Snapshot</h5>
-      </div>
-      <div class="card-body px-4 pb-4">
+<h2 class="mb-4">Dashboard</h2>
+<div class="row">
+  <div class="col-lg-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Latest Advisory</h5>
         {% if latest %}
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="stat-card">
-                <span class="label">Recommended Crop</span>
-                <h3 class="h5 mb-0 text-success">{{ latest.crop|title }}</h3>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="stat-card">
-                <span class="label">Prediction Confidence</span>
-                <h3 class="h5 mb-0">{{ (latest.confidence * 100)|round(1) if latest.confidence is not none else 'N/A' }}%</h3>
-              </div>
-            </div>
-          </div>
-          <hr>
-          <p class="mb-2"><strong>Location:</strong> {{ latest.location }}</p>
-          <p class="mb-2"><strong>Weather:</strong> {{ latest.temperature }}°C, {{ latest.rainfall }}mm rainfall, {{ latest.humidity }}% humidity</p>
-          <p class="mb-0"><strong>Fertilizer Focus:</strong> {{ latest.fertilizer }}</p>
-          <a class="btn btn-outline-success mt-4" href="{{ url_for('history') }}">View full advisory history</a>
+          <p><strong>Recommended Crop:</strong> {{ latest.crop }}</p>
+          <p><strong>Fertilizer:</strong> {{ latest.fertilizer }}</p>
+          <p><strong>Weather:</strong> {{ latest.temperature }}°C, {{ latest.rainfall }}mm rain, {{ latest.humidity }}% humidity</p>
+          <a class="btn btn-outline-success" href="{{ url_for('history') }}">View History</a>
         {% else %}
-          <p class="text-muted">No advisory generated yet. Start by entering your soil and seasonal values.</p>
-          <a class="btn btn-success" href="{{ url_for('advisory') }}">Create first recommendation</a>
+          <p>No advisories yet. Start by creating a new advisory.</p>
+          <a class="btn btn-success" href="{{ url_for('advisory') }}">Create Advisory</a>
         {% endif %}
       </div>
     </div>
   </div>
-
-  <div class="col-lg-4">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-header bg-white border-0 pt-4 px-4">
-        <h5 class="mb-0"><i class="bi bi-lightbulb text-warning me-2"></i>Actionable Tips</h5>
-      </div>
-      <div class="card-body px-4 pb-4">
-        <ul class="list-group list-group-flush tip-list">
-          <li class="list-group-item">Conduct soil testing once every season before sowing.</li>
-          <li class="list-group-item">Prioritize balanced nutrients; avoid excess urea usage.</li>
-          <li class="list-group-item">Track rain forecast before irrigation scheduling.</li>
-          <li class="list-group-item">Record observed pests to improve future decisions.</li>
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Quick Tips</h5>
+        <ul>
+          <li>Update soil test data every season.</li>
+          <li>Use balanced fertilizers based on nutrient gaps.</li>
+          <li>Monitor fields after heavy rainfall.</li>
         </ul>
       </div>
     </div>

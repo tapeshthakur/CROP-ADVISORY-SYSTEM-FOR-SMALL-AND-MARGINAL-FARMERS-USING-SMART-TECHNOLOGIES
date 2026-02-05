@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS advisories (
     rainfall REAL,
     humidity REAL,
     crop TEXT,
-    confidence REAL,
     fertilizer TEXT,
     pest_advice TEXT,
     explanation TEXT,

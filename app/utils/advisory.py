@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict
 
 
 def fertilizer_recommendation(nitrogen: float, phosphorus: float, potassium: float) -> str:
@@ -33,15 +33,9 @@ def pest_disease_advisory(crop: str, humidity: float, season: str) -> str:
     return "Regular field scouting is advised for early pest detection."
 
 
-def build_explanation(
-    crop: str, fertilizer: str, weather: Dict[str, float], confidence: Optional[float]
-) -> str:
-    confidence_text = (
-        f"The model confidence is {confidence * 100:.1f}%. " if confidence is not None else ""
-    )
+def build_explanation(crop: str, fertilizer: str, weather: Dict[str, float]) -> str:
     return (
-        f"{crop.title()} is recommended because the entered soil nutrients and rainfall pattern "
-        f"match similar historical samples from the training data. {confidence_text}"
-        f"Current weather is {weather['temperature']}°C with {weather['rainfall']}mm rainfall and "
-        f"{weather['humidity']}% humidity. Fertilizer guidance: {fertilizer}"
+        f"Based on your soil nutrients and current weather, {crop} is a suitable crop. "
+        f"Weather shows temperature {weather['temperature']}°C with {weather['rainfall']}mm rainfall. "
+        f"Fertilizer guidance: {fertilizer}"
     )

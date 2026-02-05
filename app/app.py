@@ -112,7 +112,7 @@ def create_app():
             }
             weather = get_weather(request.form["location"].strip())
             try:
-                prediction = predict_crop(
+                crop = predict_crop(
                     form_data["nitrogen"],
                     form_data["phosphorus"],
                     form_data["potassium"],
@@ -124,37 +124,26 @@ def create_app():
             except FileNotFoundError as error:
                 flash(str(error), "warning")
                 return redirect(url_for("advisory"))
-
             fertilizer = fertilizer_recommendation(
                 form_data["nitrogen"],
                 form_data["phosphorus"],
                 form_data["potassium"],
             )
-            pest_advice = pest_disease_advisory(
-                prediction["crop"], weather["humidity"], form_data["season"]
-            )
-
-            # Rule-based explanation keeps the model interpretable for final-year viva defense.
-            explanation = build_explanation(
-                crop=prediction["crop"],
-                fertilizer=fertilizer,
-                weather=weather,
-                confidence=prediction["confidence"],
-            )
+            pest_advice = pest_disease_advisory(crop, weather["humidity"], form_data["season"])
+            explanation = build_explanation(crop, fertilizer, weather)
 
             advisory_id = save_advisory(
                 user_id=session["user_id"],
-                crop=prediction["crop"],
+                crop=crop,
                 fertilizer=fertilizer,
                 pest_advice=pest_advice,
                 explanation=explanation,
                 weather=weather,
                 form_data=form_data,
-                confidence=prediction["confidence"],
             )
 
             return render_template(
-                "recommendation.html",
+                "advisory_result.html",
                 advisory=get_advisory(advisory_id),
             )
 
@@ -195,7 +184,6 @@ def initialize_database():
                 rainfall REAL,
                 humidity REAL,
                 crop TEXT,
-                confidence REAL,
                 fertilizer TEXT,
                 pest_advice TEXT,
                 explanation TEXT,
@@ -204,12 +192,6 @@ def initialize_database():
             );
             """
         )
-
-        # Lightweight migration so existing project databases remain usable.
-        columns = {row[1] for row in cursor.execute("PRAGMA table_info(advisories)").fetchall()}
-        if "confidence" not in columns:
-            cursor.execute("ALTER TABLE advisories ADD COLUMN confidence REAL")
-
         conn.commit()
 
 
@@ -224,33 +206,18 @@ def load_model():
 def predict_crop(nitrogen, phosphorus, potassium, ph, rainfall, temperature, humidity):
     model = load_model()
     features = [[nitrogen, phosphorus, potassium, ph, rainfall, temperature, humidity]]
-    crop = model.predict(features)[0]
-
-    confidence = None
-    if hasattr(model, "predict_proba"):
-        confidence = float(max(model.predict_proba(features)[0]))
-
-    return {"crop": crop, "confidence": confidence}
+    return model.predict(features)[0]
 
 
-def save_advisory(
-    user_id,
-    crop,
-    fertilizer,
-    pest_advice,
-    explanation,
-    weather,
-    form_data,
-    confidence,
-):
+def save_advisory(user_id, crop, fertilizer, pest_advice, explanation, weather, form_data):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute(
             """
             INSERT INTO advisories (
                 user_id, location, soil_ph, nitrogen, phosphorus, potassium, season,
-                temperature, rainfall, humidity, crop, confidence, fertilizer, pest_advice, explanation, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                temperature, rainfall, humidity, crop, fertilizer, pest_advice, explanation, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 user_id,
@@ -264,7 +231,6 @@ def save_advisory(
                 weather["rainfall"],
                 weather["humidity"],
                 crop,
-                confidence,
                 fertilizer,
                 pest_advice,
                 explanation,
@@ -321,7 +287,6 @@ def row_to_dict(row):
         "rainfall",
         "humidity",
         "crop",
-        "confidence",
         "fertilizer",
         "pest_advice",
         "explanation",
