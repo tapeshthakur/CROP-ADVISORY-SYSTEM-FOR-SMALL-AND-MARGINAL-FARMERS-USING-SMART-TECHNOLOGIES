@@ -1,0 +1,58 @@
+:root {
+  --brand-green: #1f7a4f;
+  --brand-green-dark: #165b3a;
+  --soft-bg: #f4f7f5;
+}
+
+body {
+  background: var(--soft-bg);
+  color: #1f2933;
+}
+
+.app-navbar {
+  background: linear-gradient(90deg, var(--brand-green), var(--brand-green-dark));
+}
+
+.hero-card {
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #1f7a4f, #2a925f);
+  color: #ffffff;
+  box-shadow: 0 0.75rem 1.5rem rgba(31, 122, 79, 0.25);
+}
+
+.auth-card,
+.card,
+.summary-box,
+.stat-card {
+  border-radius: 0.9rem;
+}
+
+.summary-box,
+.stat-card {
+  background: #f8faf9;
+  border: 1px solid #e2ece6;
+  padding: 0.85rem;
+}
+
+.stat-card .label {
+  font-size: 0.78rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tip-list .list-group-item {
+  border: none;
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+}
+
+.min-vh-70 {
+  min-height: 70vh;
+}
+
+.footer {
+  background: #ffffff;
+  border-top: 1px solid #dfe8e2;
+}
