@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Recommendation Result | Crop Advisory DSS{% endblock %}
+
+{% block content %}
+<h2 class="h3 fw-bold mb-4">Recommendation Result</h2>
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <p class="text-muted mb-1">Recommended Crop</p>
+            <h3 class="text-success fw-bold mb-0">{{ advisory.crop|title }}</h3>
+          </div>
+          <span class="badge rounded-pill text-bg-success fs-6">
+            Confidence: {{ (advisory.confidence * 100)|round(1) if advisory.confidence is not none else 'N/A' }}%
+          </span>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <div class="summary-box">
+              <h6 class="mb-2">Soil Input Summary</h6>
+              <small class="d-block">pH: {{ advisory.soil_ph }}</small>
+              <small class="d-block">N: {{ advisory.nitrogen }} | P: {{ advisory.phosphorus }} | K: {{ advisory.potassium }}</small>
+              <small class="d-block">Season: {{ advisory.season }}</small>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="summary-box">
+              <h6 class="mb-2">Weather Summary</h6>
+              <small class="d-block">Temperature: {{ advisory.temperature }}°C</small>
+              <small class="d-block">Rainfall: {{ advisory.rainfall }}mm</small>
+              <small class="d-block">Humidity: {{ advisory.humidity }}%</small>
+              <small class="d-block">Location: {{ advisory.location }}</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <h6>Explainable Advisory Reasoning</h6>
+          <p class="mb-0">{{ advisory.explanation }}</p>
+        </div>
+
+        <div class="mb-3">
+          <h6>Fertilizer Suggestion</h6>
+          <p class="mb-0">{{ advisory.fertilizer }}</p>
+        </div>
+
+        <div>
+          <h6>Pest & Disease Tip</h6>
+          <p class="mb-0">{{ advisory.pest_advice }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-4">
+        <h6 class="fw-semibold">Recommended Next Actions</h6>
+        <ul class="small ps-3 mb-0">
+          <li>Match seed variety with local market demand.</li>
+          <li>Apply fertilizer in split doses for better uptake.</li>
+          <li>Review this advisory during weekly field inspection.</li>
+        </ul>
+      </div>
+    </div>
+    <a class="btn btn-outline-success w-100 mb-2" href="{{ url_for('advisory') }}">Generate Another Recommendation</a>
+    <a class="btn btn-success w-100" href="{{ url_for('history') }}">View Advisory History</a>
+  </div>
+</div>
+{% endblock %}
