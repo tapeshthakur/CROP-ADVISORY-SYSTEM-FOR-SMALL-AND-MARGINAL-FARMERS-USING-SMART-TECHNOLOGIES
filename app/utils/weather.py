@@ -1,41 +1,49 @@
-import os
-import random
+from typing import Dict
 import requests
 
 
-DEFAULT_WEATHER = {
-    "temperature": 28.0,
-    "rainfall": 110.0,
-    "humidity": 72.0,
-}
+# OpenWeatherMap API (free tier is enough for projects)
+API_KEY = "YOUR_API_KEY_HERE"
+BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 
 
-def get_weather(location: str):
-    api_key = os.environ.get("OPENWEATHER_API_KEY")
-    if not api_key:
-        return _mock_weather()
+def get_weather(city: str = "Delhi") -> Dict[str, float]:
+    """
+    Fetches real-time weather data for a given city.
+
+    Returns:
+        Dict with temperature (°C), rainfall (mm), and humidity (%)
+    """
+
+    params = {
+        "q": city,
+        "appid": API_KEY,
+        "units": "metric"
+    }
 
     try:
-        response = requests.get(
-            "https://api.openweathermap.org/data/2.5/weather",
-            params={"q": location, "appid": api_key, "units": "metric"},
-            timeout=8,
-        )
+        response = requests.get(BASE_URL, params=params, timeout=5)
         response.raise_for_status()
         data = response.json()
-        rainfall = data.get("rain", {}).get("1h", random.uniform(0, 200))
+
+        temperature = data["main"]["temp"]
+        humidity = data["main"]["humidity"]
+
+        # Rainfall may not always be present
+        rainfall = 0.0
+        if "rain" in data and "1h" in data["rain"]:
+            rainfall = data["rain"]["1h"]
+
         return {
-            "temperature": data["main"]["temp"],
-            "rainfall": rainfall,
-            "humidity": data["main"]["humidity"],
+            "temperature": float(temperature),
+            "rainfall": float(rainfall),
+            "humidity": float(humidity)
         }
-    except (requests.RequestException, KeyError, ValueError):
-        return _mock_weather()
 
-
-def _mock_weather():
-    return {
-        "temperature": round(random.uniform(22, 34), 1),
-        "rainfall": round(random.uniform(40, 200), 1),
-        "humidity": round(random.uniform(55, 90), 1),
-    }
+    except Exception as e:
+        # Fallback values (safe defaults)
+        return {
+            "temperature": 30.0,
+            "rainfall": 0.0,
+            "humidity": 60.0
+        }

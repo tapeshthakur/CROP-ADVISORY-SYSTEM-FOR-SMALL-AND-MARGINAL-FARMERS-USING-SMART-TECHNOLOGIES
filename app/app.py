@@ -7,24 +7,35 @@ from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import joblib
 
-from utils.advisory import (
-    build_explanation,
-    fertilizer_recommendation,
-    pest_disease_advisory,
+from app.utils.advisory import (
+    get_crop_advisory,
+    get_fertilizer_advisory,
+    get_pest_advisory
 )
-from utils.weather import get_weather
 
+from app.utils.weather import get_weather
+
+
+# -------------------------------------------------
+# PATH CONFIG
+# -------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "db" / "crop_advisory.db"
 MODEL_PATH = BASE_DIR / "ml" / "model.pkl"
 
 
+# -------------------------------------------------
+# APPLICATION FACTORY
+# -------------------------------------------------
 def create_app():
     app = Flask(__name__)
     app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
 
     initialize_database()
 
+    # -------------------------
+    # AUTH ROUTES
+    # -------------------------
     @app.route("/")
     def index():
         return render_template("index.html")
@@ -35,6 +46,7 @@ def create_app():
             username = request.form["username"].strip()
             password = request.form["password"].strip()
             role = request.form.get("role", "farmer")
+
             if not username or not password:
                 flash("Username and password are required.", "danger")
                 return redirect(url_for("register"))
@@ -61,6 +73,7 @@ def create_app():
         if request.method == "POST":
             username = request.form["username"].strip()
             password = request.form["password"].strip()
+
             with sqlite3.connect(DB_PATH) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
@@ -68,12 +81,15 @@ def create_app():
                     (username, password),
                 )
                 user = cursor.fetchone()
+
             if user:
                 session["user_id"] = user[0]
                 session["role"] = user[1]
                 flash("Login successful.", "success")
                 return redirect(url_for("dashboard"))
+
             flash("Invalid credentials.", "danger")
+
         return render_template("login.html")
 
     @app.route("/logout")
@@ -82,6 +98,9 @@ def create_app():
         flash("Logged out successfully.", "info")
         return redirect(url_for("index"))
 
+    # -------------------------
+    # AUTH DECORATOR
+    # -------------------------
     def login_required(view_func):
         @wraps(view_func)
         def wrapper(*args, **kwargs):
@@ -89,15 +108,20 @@ def create_app():
                 flash("Please log in to continue.", "warning")
                 return redirect(url_for("login"))
             return view_func(*args, **kwargs)
-
         return wrapper
 
+    # -------------------------
+    # DASHBOARD
+    # -------------------------
     @app.route("/dashboard")
     @login_required
     def dashboard():
         latest = get_latest_advisory(session["user_id"])
         return render_template("dashboard.html", latest=latest)
 
+    # -------------------------
+    # ADVISORY
+    # -------------------------
     @app.route("/advisory", methods=["GET", "POST"])
     @login_required
     def advisory():
@@ -110,27 +134,36 @@ def create_app():
                 "potassium": float(request.form["potassium"]),
                 "season": request.form["season"],
             }
-            weather = get_weather(request.form["location"].strip())
-            try:
-                crop = predict_crop(
-                    form_data["nitrogen"],
-                    form_data["phosphorus"],
-                    form_data["potassium"],
-                    form_data["soil_ph"],
-                    weather["rainfall"],
-                    weather["temperature"],
-                    weather["humidity"],
-                )
-            except FileNotFoundError as error:
-                flash(str(error), "warning")
-                return redirect(url_for("advisory"))
-            fertilizer = fertilizer_recommendation(
+
+            weather = get_weather(form_data["location"])
+
+            crop = predict_crop(
+                form_data["nitrogen"],
+                form_data["phosphorus"],
+                form_data["potassium"],
+                form_data["soil_ph"],
+                weather["rainfall"],
+                weather["temperature"],
+                weather["humidity"],
+            )
+
+            fertilizer = get_fertilizer_advisory(
                 form_data["nitrogen"],
                 form_data["phosphorus"],
                 form_data["potassium"],
             )
-            pest_advice = pest_disease_advisory(crop, weather["humidity"], form_data["season"])
-            explanation = build_explanation(crop, fertilizer, weather)
+
+            pest_advice = get_pest_advisory(
+                crop,
+                weather["humidity"],
+                form_data["season"]
+            )
+
+            explanation = get_crop_advisory(
+                crop,
+                fertilizer,
+                weather
+            )
 
             advisory_id = save_advisory(
                 user_id=session["user_id"],
@@ -149,6 +182,9 @@ def create_app():
 
         return render_template("advisory_form.html")
 
+    # -------------------------
+    # HISTORY
+    # -------------------------
     @app.route("/history")
     @login_required
     def history():
@@ -158,6 +194,9 @@ def create_app():
     return app
 
 
+# -------------------------------------------------
+# DATABASE & ML HELPERS
+# -------------------------------------------------
 def initialize_database():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
@@ -203,9 +242,9 @@ def load_model():
     return joblib.load(MODEL_PATH)
 
 
-def predict_crop(nitrogen, phosphorus, potassium, ph, rainfall, temperature, humidity):
+def predict_crop(n, p, k, ph, rainfall, temperature, humidity):
     model = load_model()
-    features = [[nitrogen, phosphorus, potassium, ph, rainfall, temperature, humidity]]
+    features = [[n, p, k, ph, rainfall, temperature, humidity]]
     return model.predict(features)[0]
 
 
@@ -275,26 +314,14 @@ def row_to_dict(row):
     if not row:
         return None
     keys = [
-        "id",
-        "user_id",
-        "location",
-        "soil_ph",
-        "nitrogen",
-        "phosphorus",
-        "potassium",
-        "season",
-        "temperature",
-        "rainfall",
-        "humidity",
-        "crop",
-        "fertilizer",
-        "pest_advice",
-        "explanation",
-        "created_at",
+        "id", "user_id", "location", "soil_ph", "nitrogen", "phosphorus", "potassium",
+        "season", "temperature", "rainfall", "humidity",
+        "crop", "fertilizer", "pest_advice", "explanation", "created_at"
     ]
     return dict(zip(keys, row))
 
 
-if __name__ == "__main__":
-    app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+# -------------------------------------------------
+# GUNICORN ENTRY POINT
+# -------------------------------------------------
+app = create_app()
